@@ -35,8 +35,10 @@ ament_target_dependencies(
   rclcpp_lifecycle
 )
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE "JOINT_STATE_BROADCASTER_BUILDING_DLL")
+
 target_compile_definitions(${PROJECT_NAME} PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
-pluginlib_export_plugin_description_file(robot_control_system robot_control_system.xml)
+pluginlib_export_plugin_description_file(hardware_interface robot_control_system.xml)
 
 install(
   TARGETS ${PROJECT_NAME}
