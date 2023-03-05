@@ -20,13 +20,13 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <box size="0.4 0.2 0.1" />
+        <box size="0.4 0.4 0.1" />
       </geometry>
     </collision>
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <box size="0.4 0.2 0.1" />
+        <box size="0.4 0.4 0.1" />
       </geometry>
       <material name="blue" />
     </visual>
@@ -36,13 +36,13 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <box size="0.2 0.2 0.1" />
+        <box size="0.4 0.1 0.1" />
       </geometry>
     </collision>
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <box size="0.2 0.2 0.1" />
+        <box size="0.4 0.1 0.1" />
       </geometry>
       <material name="blue" />
     </visual>
@@ -58,7 +58,7 @@
   <joint name="joint2" type="continuous">
     <parent link="base" />
     <child link="rotor" />
-    <origin xyz="0 0 0" rpy="0 0 0" />
+    <origin xyz="0.25 0 0" rpy="0 1.57 0" />
     <axis xyz="0 1 0" />
     <dynamics damping="0.7" />
   </joint>
@@ -66,9 +66,9 @@
   <ros2_control name="arduino_actuator_ros2_control" type="system">
     <hardware>
       <plugin>robot_control_system/ArduinoActuatorInterface</plugin>
-      <param name="example_param_hw_start_duration_sec">0</param>
-      <param name="example_param_hw_stop_duration_sec">3.0</param>
-      <param name="example_param_hw_slowdown">100</param>
+      <param name="hw_start_duration_sec">0</param>
+      <param name="hw_stop_duration_sec">3.0</param>
+      <param name="hw_slowdown">100</param>
     </hardware>
 
     <joint name="joint2">

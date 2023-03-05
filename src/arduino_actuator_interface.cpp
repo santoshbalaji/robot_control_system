@@ -11,11 +11,10 @@ CallbackReturn ArduinoActuatorInterface::on_init(
     return CallbackReturn::ERROR;
   }
 
-  // START: This part here is for exemplary purposes - Please do not copy to your production code
-  hw_start_sec_ = stod(info_.hardware_parameters["example_param_hw_start_duration_sec"]);
-  hw_stop_sec_ = stod(info_.hardware_parameters["example_param_hw_stop_duration_sec"]);
-  hw_slowdown_ = stod(info_.hardware_parameters["example_param_hw_slowdown"]);
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
+  hw_start_sec_ = stod(info_.hardware_parameters["hw_start_duration_sec"]);
+  hw_stop_sec_ = stod(info_.hardware_parameters["hw_stop_duration_sec"]);
+  hw_slowdown_ = stod(info_.hardware_parameters["hw_slowdown"]);
+
   hw_states_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
 
@@ -25,7 +24,7 @@ CallbackReturn ArduinoActuatorInterface::on_init(
     if (joint.command_interfaces.size() != 1)
     {
       RCLCPP_FATAL(
-        rclcpp::get_logger("RRBotSystemPositionOnlyHardware"),
+        rclcpp::get_logger("arduino_actuator_interface"),
         "Joint '%s' has %zu command interfaces found. 1 expected.", joint.name.c_str(),
         joint.command_interfaces.size());
       return CallbackReturn::ERROR;
@@ -34,7 +33,7 @@ CallbackReturn ArduinoActuatorInterface::on_init(
     if (joint.command_interfaces[0].name != hardware_interface::HW_IF_POSITION)
     {
       RCLCPP_FATAL(
-        rclcpp::get_logger("RRBotSystemPositionOnlyHardware"),
+        rclcpp::get_logger("arduino_actuator_interface"),
         "Joint '%s' have %s command interfaces found. '%s' expected.", joint.name.c_str(),
         joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
       return CallbackReturn::ERROR;
@@ -43,7 +42,7 @@ CallbackReturn ArduinoActuatorInterface::on_init(
     if (joint.state_interfaces.size() != 1)
     {
       RCLCPP_FATAL(
-        rclcpp::get_logger("RRBotSystemPositionOnlyHardware"),
+        rclcpp::get_logger("arduino_actuator_interface"),
         "Joint '%s' has %zu state interface. 1 expected.", joint.name.c_str(),
         joint.state_interfaces.size());
       return CallbackReturn::ERROR;
@@ -52,7 +51,7 @@ CallbackReturn ArduinoActuatorInterface::on_init(
     if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION)
     {
       RCLCPP_FATAL(
-        rclcpp::get_logger("RRBotSystemPositionOnlyHardware"),
+        rclcpp::get_logger("arduino_actuator_interface"),
         "Joint '%s' have %s state interface. '%s' expected.", joint.name.c_str(),
         joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
       return CallbackReturn::ERROR;
@@ -65,33 +64,33 @@ CallbackReturn ArduinoActuatorInterface::on_init(
 CallbackReturn ArduinoActuatorInterface::on_configure(
   const rclcpp_lifecycle::State & previous_state)
 {
-  // START: This part here is for exemplary purposes - Please do not copy to your production code
   RCLCPP_INFO(
-    rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "Configuring ...please wait...");
+    rclcpp::get_logger("arduino_actuator_interface"), "configuring hardware .......");
 
   for (int i = 0; i < hw_start_sec_; i++)
   {
     rclcpp::sleep_for(std::chrono::seconds(1));
     RCLCPP_INFO(
-      rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "%.1f seconds left...",
+      rclcpp::get_logger("arduino_actuator_interface"), "%.1f seconds left in configuring",
       hw_start_sec_ - i);
   }
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
 
-  // reset values always when configuring hardware
   for (uint i = 0; i < hw_states_.size(); i++)
   {
     hw_states_[i] = 0;
     hw_commands_[i] = 0;
   }
 
-  RCLCPP_INFO(rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "Successfully configured!");
+  RCLCPP_INFO(rclcpp::get_logger("arduino_actuator_interface"), "successfully configured");
 
   return CallbackReturn::SUCCESS;
 }
 
 std::vector<hardware_interface::StateInterface> ArduinoActuatorInterface::export_state_interfaces()
 {
+  RCLCPP_INFO(
+    rclcpp::get_logger("arduino_actuator_interface"), "exporting state interfaces");
+
   std::vector<hardware_interface::StateInterface> state_interfaces;
   for (uint i = 0; i < info_.joints.size(); i++)
   {
@@ -103,6 +102,9 @@ std::vector<hardware_interface::StateInterface> ArduinoActuatorInterface::export
 
 std::vector<hardware_interface::CommandInterface> ArduinoActuatorInterface::export_command_interfaces()
 {
+  RCLCPP_INFO(
+    rclcpp::get_logger("arduino_actuator_interface"), "exporting command interfaces");
+
   std::vector<hardware_interface::CommandInterface> command_interfaces;
   for (uint i = 0; i < info_.joints.size(); i++)
   {
@@ -116,26 +118,23 @@ std::vector<hardware_interface::CommandInterface> ArduinoActuatorInterface::expo
 CallbackReturn ArduinoActuatorInterface::on_activate(
   const rclcpp_lifecycle::State & previous_state)
 {
-  // START: This part here is for exemplary purposes - Please do not copy to your production code
   RCLCPP_INFO(
-    rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "Activating ...please wait...");
+    rclcpp::get_logger("arduino_actuator_interface"), "activating now");
 
   for (int i = 0; i < hw_start_sec_; i++)
   {
     rclcpp::sleep_for(std::chrono::seconds(1));
     RCLCPP_INFO(
-      rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "%.1f seconds left...",
+      rclcpp::get_logger("arduino_actuator_interface"), "%.1f seconds left in activating",
       hw_start_sec_ - i);
   }
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
 
-  // command and state should be equal when starting
   for (uint i = 0; i < hw_states_.size(); i++)
   {
     hw_commands_[i] = hw_states_[i];
   }
 
-  RCLCPP_INFO(rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "Successfully activated!");
+  RCLCPP_INFO(rclcpp::get_logger("arduino_actuator_interface"), "successfully activated");
 
   return CallbackReturn::SUCCESS;
 }
@@ -143,20 +142,18 @@ CallbackReturn ArduinoActuatorInterface::on_activate(
 CallbackReturn ArduinoActuatorInterface::on_deactivate(
   const rclcpp_lifecycle::State & previous_state)
 {
-  // START: This part here is for exemplary purposes - Please do not copy to your production code
   RCLCPP_INFO(
-    rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "Deactivating ...please wait...");
+    rclcpp::get_logger("arduino_actuator_interface"), "deactivating now");
 
   for (int i = 0; i < hw_stop_sec_; i++)
   {
     rclcpp::sleep_for(std::chrono::seconds(1));
     RCLCPP_INFO(
-      rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "%.1f seconds left...",
+      rclcpp::get_logger("arduino_actuator_interface"), "%.1f seconds left in deactivating",
       hw_stop_sec_ - i);
   }
 
-  RCLCPP_INFO(rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "Successfully deactivated!");
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
+  RCLCPP_INFO(rclcpp::get_logger("arduino_actuator_interface"), "successfully deactivated");
 
   return CallbackReturn::SUCCESS;
 }
