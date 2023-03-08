@@ -19,6 +19,7 @@ add_library(
   ${PROJECT_NAME}
   SHARED
   src/arduino_actuator_interface.cpp
+  src/serial_port.cpp
 )
 
 target_include_directories(

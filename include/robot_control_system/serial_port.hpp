@@ -5,6 +5,11 @@
 #include <errno.h>
 #include <termios.h>
 #include <unistd.h>
+#include <thread>
+
+#include <iostream>
+
+using namespace std;
 
 namespace robot_control_system
 {
@@ -12,14 +17,15 @@ namespace robot_control_system
 class SerialPort
 {
 public:
-  SerialPort();
-  void connect();
-  void read();
-  void write();
+  SerialPort(string port);
+  int connect();
+  char * read_from_serial();
+  int write_to_serial();
   void disconenct();
 
 private:
-
+  string port_;
+  int file_descriptor_;
 };
 
 } // namespace robot_control_system
