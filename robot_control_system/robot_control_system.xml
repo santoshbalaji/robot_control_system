@@ -1,0 +1,7 @@
+<library path="robot_control_system">
+  <class name="robot_control_system/ArduinoActuatorInterface"
+         type="robot_control_system::ArduinoActuatorInterface"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>Test description</description>
+  </class>
+</library>
