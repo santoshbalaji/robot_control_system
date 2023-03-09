@@ -16,8 +16,8 @@
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
+#include "robot_control_system/serial_port.hpp"
 #include "robot_control_system/visibility_control.h"
-
 
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
@@ -54,14 +54,14 @@ public:
   hardware_interface::return_type write() override;
 
 private:
-  // Parameters for the RRBot simulation
   double hw_start_sec_;
   double hw_stop_sec_;
   double hw_slowdown_;
 
-  // Store the command for the simulated robot
   std::vector<double> hw_commands_;
   std::vector<double> hw_states_;
+
+  SerialPort * serial_port;
 };
 
 } // namespace robot_control_system

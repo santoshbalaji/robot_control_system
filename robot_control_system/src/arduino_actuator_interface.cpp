@@ -20,7 +20,6 @@ CallbackReturn ArduinoActuatorInterface::on_init(
 
   for (const hardware_interface::ComponentInfo & joint : info_.joints)
   {
-    // RRBotSystemPositionOnly has exactly one state and command interface on each joint
     if (joint.command_interfaces.size() != 1)
     {
       RCLCPP_FATAL(
@@ -134,6 +133,9 @@ CallbackReturn ArduinoActuatorInterface::on_activate(
     hw_commands_[i] = hw_states_[i];
   }
 
+  this->serial_port = new SerialPort("/dev/ttyACM0");
+  this->serial_port->connect();
+
   RCLCPP_INFO(rclcpp::get_logger("arduino_actuator_interface"), "successfully activated");
 
   return CallbackReturn::SUCCESS;
@@ -153,6 +155,8 @@ CallbackReturn ArduinoActuatorInterface::on_deactivate(
       hw_stop_sec_ - i);
   }
 
+  this->serial_port->disconenct();
+
   RCLCPP_INFO(rclcpp::get_logger("arduino_actuator_interface"), "successfully deactivated");
 
   return CallbackReturn::SUCCESS;
@@ -160,38 +164,36 @@ CallbackReturn ArduinoActuatorInterface::on_deactivate(
 
 hardware_interface::return_type ArduinoActuatorInterface::read()
 {
-  // START: This part here is for exemplary purposes - Please do not copy to your production code
-  RCLCPP_INFO(rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "Reading...");
+  RCLCPP_INFO(rclcpp::get_logger("arduino_actuator_interface"), "Reading...");
 
   for (uint i = 0; i < hw_states_.size(); i++)
   {
-    // Simulate RRBot's movement
     hw_states_[i] = hw_states_[i] + (hw_commands_[i] - hw_states_[i]) / hw_slowdown_;
     RCLCPP_INFO(
-      rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "Got state %.5f for joint %d!",
+      rclcpp::get_logger("arduino_actuator_interface"), "Got state %.5f for joint %d!",
       hw_states_[i], i);
   }
-  RCLCPP_INFO(rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "Joints successfully read!");
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
+  RCLCPP_INFO(rclcpp::get_logger("arduino_actuator_interface"), "Joints successfully read!");
 
   return hardware_interface::return_type::OK;
 }
 
 hardware_interface::return_type ArduinoActuatorInterface::write()
 {
-  // START: This part here is for exemplary purposes - Please do not copy to your production code
-  RCLCPP_INFO(rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "Writing...");
+  RCLCPP_INFO(rclcpp::get_logger("arduino_actuator_interface"), "Writing...");
+
+  string data = "ON\n";
+  this->serial_port->write_to_serial(data.c_str());
 
   for (uint i = 0; i < hw_commands_.size(); i++)
   {
     // Simulate sending commands to the hardware
     RCLCPP_INFO(
-      rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "Got command %.5f for joint %d!",
+      rclcpp::get_logger("arduino_actuator_interface"), "Got command %.5f for joint %d!",
       hw_commands_[i], i);
   }
   RCLCPP_INFO(
-    rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "Joints successfully written!");
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
+    rclcpp::get_logger("arduino_actuator_interface"), "Joints successfully written %d", hw_commands_.size());
 
   return hardware_interface::return_type::OK;
 }

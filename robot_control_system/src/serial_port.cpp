@@ -28,20 +28,20 @@ int SerialPort::connect()
   return 0;
 }
 
-char * SerialPort::read_from_serial()
+char * SerialPort::read_from_serial(int bytes_to_read)
 {
-  char data[100];
-  int bytes_read = read(this->file_descriptor_, data, 100);
+  char data[bytes_to_read];
+  int bytes_read = read(this->file_descriptor_, data, bytes_to_read);
   if (bytes_read < 0) 
   {
     std::cout << "Error: Unable to read from serial port." << std::endl;
   }
   return data;
 }
-
-int SerialPort::write_to_serial()
+ 
+int SerialPort::write_to_serial(const char * data)
 {
-  int bytes_written = write(this->file_descriptor_, "ON\n", 3);
+  int bytes_written = write(this->file_descriptor_, data, 3);
   if (bytes_written < 0) 
   {
     std::cout << "Error: Unable to write to serial port." << std::endl;
