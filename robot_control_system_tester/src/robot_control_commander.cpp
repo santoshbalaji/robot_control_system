@@ -9,7 +9,7 @@ namespace robot_control_system_tester
       "/position_trajectory_controller/joint_trajectory", 10);
     
     this->background_process_timer_ = this->create_wall_timer(
-      10000ms, std::bind(&RobotControlCommander::timer_callback, this));
+      4000ms, std::bind(&RobotControlCommander::timer_callback, this));
   }
 
   void RobotControlCommander::timer_callback()

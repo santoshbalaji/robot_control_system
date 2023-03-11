@@ -59,7 +59,7 @@
     <parent link="base" />
     <child link="rotor" />
     <origin xyz="0.25 0 0" rpy="0 1.57 0" />
-    <axis xyz="0 1 0" />
+    <axis xyz="0 0 1" />
     <dynamics damping="0.7" />
   </joint>
 
@@ -72,11 +72,13 @@
     </hardware>
 
     <joint name="joint2">
-      <command_interface name="position">
+      <command_interface name="effort">
         <param name="min">-1</param>
         <param name="max">1</param>
       </command_interface>
       <state_interface name="position" />
+      <state_interface name="velocity" />
+
     </joint>
   </ros2_control>
 
