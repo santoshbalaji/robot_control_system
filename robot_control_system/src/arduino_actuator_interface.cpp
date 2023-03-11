@@ -36,62 +36,64 @@ CallbackReturn ArduinoActuatorInterface::on_init(
   hw_states_.resize(total_states, std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(total_commands, std::numeric_limits<double>::quiet_NaN());
 
-  for (const hardware_interface::ComponentInfo & joint : info_.joints)
-  {
-    if (joint.command_interfaces.size() != 2)
-    {
-      RCLCPP_FATAL(
-        rclcpp::get_logger("arduino_actuator_interface"),
-        "Joint '%s' has %zu command interfaces found. 2 expected.", joint.name.c_str(),
-        joint.command_interfaces.size());
-      return CallbackReturn::ERROR;
-    }
+  RCLCPP_INFO(rclcpp::get_logger("test"), "Me in %d %d", total_commands, total_states);
 
-    if (joint.command_interfaces[0].name != hardware_interface::HW_IF_POSITION)
-    {
-      RCLCPP_FATAL(
-        rclcpp::get_logger("arduino_actuator_interface"),
-        "Joint '%s' have %s command interfaces found. '%s' expected.", joint.name.c_str(),
-        joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
-      return CallbackReturn::ERROR;
-    }
+  // for (const hardware_interface::ComponentInfo & joint : info_.joints)
+  // {
+  //   if (joint.command_interfaces.size() != 2)
+  //   {
+  //     RCLCPP_FATAL(
+  //       rclcpp::get_logger("arduino_actuator_interface"),
+  //       "Joint '%s' has %zu command interfaces found. 2 expected.", joint.name.c_str(),
+  //       joint.command_interfaces.size());
+  //     return CallbackReturn::ERROR;
+  //   }
 
-    if (joint.command_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
-    {
-      RCLCPP_FATAL(
-        rclcpp::get_logger("arduino_actuator_interface"),
-        "Joint '%s' have %s command interfaces found. '%s' expected.", joint.name.c_str(),
-        joint.command_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
-      return CallbackReturn::ERROR;
-    }
+  //   if (joint.command_interfaces[0].name != hardware_interface::HW_IF_POSITION)
+  //   {
+  //     RCLCPP_FATAL(
+  //       rclcpp::get_logger("arduino_actuator_interface"),
+  //       "Joint '%s' have %s command interfaces found. '%s' expected.", joint.name.c_str(),
+  //       joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
+  //     return CallbackReturn::ERROR;
+  //   }
 
-    if (joint.state_interfaces.size() != 2)
-    {
-      RCLCPP_FATAL(
-        rclcpp::get_logger("arduino_actuator_interface"),
-        "Joint '%s' has %zu state interface. 2 expected.", joint.name.c_str(),
-        joint.state_interfaces.size());
-      return CallbackReturn::ERROR;
-    }
+  //   if (joint.command_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
+  //   {
+  //     RCLCPP_FATAL(
+  //       rclcpp::get_logger("arduino_actuator_interface"),
+  //       "Joint '%s' have %s command interfaces found. '%s' expected.", joint.name.c_str(),
+  //       joint.command_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
+  //     return CallbackReturn::ERROR;
+  //   }
 
-    if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION)
-    {
-      RCLCPP_FATAL(
-        rclcpp::get_logger("arduino_actuator_interface"),
-        "Joint '%s' have %s state interface. '%s' expected.", joint.name.c_str(),
-        joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
-      return CallbackReturn::ERROR;
-    }
+  //   if (joint.state_interfaces.size() != 2)
+  //   {
+  //     RCLCPP_FATAL(
+  //       rclcpp::get_logger("arduino_actuator_interface"),
+  //       "Joint '%s' has %zu state interface. 2 expected.", joint.name.c_str(),
+  //       joint.state_interfaces.size());
+  //     return CallbackReturn::ERROR;
+  //   }
 
-    if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
-    {
-      RCLCPP_FATAL(
-        rclcpp::get_logger("arduino_actuator_interface"),
-        "Joint '%s' have %s state interface. '%s' expected.", joint.name.c_str(),
-        joint.state_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
-      return CallbackReturn::ERROR;
-    }
-  }
+  //   if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION)
+  //   {
+  //     RCLCPP_FATAL(
+  //       rclcpp::get_logger("arduino_actuator_interface"),
+  //       "Joint '%s' have %s state interface. '%s' expected.", joint.name.c_str(),
+  //       joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
+  //     return CallbackReturn::ERROR;
+  //   }
+
+  //   if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
+  //   {
+  //     RCLCPP_FATAL(
+  //       rclcpp::get_logger("arduino_actuator_interface"),
+  //       "Joint '%s' have %s state interface. '%s' expected.", joint.name.c_str(),
+  //       joint.state_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
+  //     return CallbackReturn::ERROR;
+  //   }
+  // }
 
   return CallbackReturn::SUCCESS;
 }
@@ -161,6 +163,7 @@ std::vector<hardware_interface::CommandInterface> ArduinoActuatorInterface::expo
     }
   }
 
+  RCLCPP_INFO(rclcpp::get_logger("test"), "Me out %d", command_interfaces.size());
   return command_interfaces;
 }
 
@@ -207,13 +210,18 @@ CallbackReturn ArduinoActuatorInterface::on_deactivate(
   return CallbackReturn::SUCCESS;
 }
 
-hardware_interface::return_type ArduinoActuatorInterface::read()
+hardware_interface::return_type ArduinoActuatorInterface::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   RCLCPP_INFO(rclcpp::get_logger("arduino_actuator_interface"), "Reading...");
 
   for (uint i = 0; i < hw_states_.size(); i++)
   {
     hw_states_[i] = hw_states_[i] + (hw_commands_[i] - hw_states_[i]) / hw_slowdown_;
+    RCLCPP_INFO(rclcpp::get_logger("test"), "Me casa %d %d %lf %lf", 
+      hw_states_.size(),
+      hw_commands_.size(),
+      hw_states_[i],
+      hw_commands_[i]);
     RCLCPP_INFO(
       rclcpp::get_logger("arduino_actuator_interface"), "Got state %.5f for joint %d!",
       hw_states_[i], i);
@@ -223,7 +231,7 @@ hardware_interface::return_type ArduinoActuatorInterface::read()
   return hardware_interface::return_type::OK;
 }
 
-hardware_interface::return_type ArduinoActuatorInterface::write()
+hardware_interface::return_type ArduinoActuatorInterface::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   RCLCPP_INFO(rclcpp::get_logger("arduino_actuator_interface"), "Writing...");
 
