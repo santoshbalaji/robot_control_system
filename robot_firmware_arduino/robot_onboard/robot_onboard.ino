@@ -23,7 +23,8 @@ void setup()
 
 void loop() 
 {
-  if(millis() - elapsed_time >= 50)
+  // to run the code without delay command (run the logic every 100ms)
+  if(millis() - elapsed_time >= 100)
   {
     analogWrite(PWMA, pwm_value);
     digitalWrite(MAF, forward);

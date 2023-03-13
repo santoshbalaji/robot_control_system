@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 10  # Hz
+    update_rate: 10  # Value in hertz
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
@@ -20,14 +20,14 @@ position_trajectory_controller:
       - position
       - velocity
 
-    state_publish_rate: 200.0 # Defaults to 50
-    action_monitor_rate: 20.0 # Defaults to 20
+    state_publish_rate: 200.0
+    action_monitor_rate: 20.0
 
     allow_partial_joints_goal: true
     open_loop_control: false
     allow_integration_in_goal_trajectories: true
     constraints:
-      stopped_velocity_tolerance: 0.01 # Defaults to 0.01
+      stopped_velocity_tolerance: 0.05 # Defaults to 0.01
       goal_time: 0.0 # Defaults to 0.0 (start immediately)
 
     gains:
@@ -36,5 +36,5 @@ position_trajectory_controller:
           i: 1.0
           d: 1.0
           i_clamp: 1.0
-          ff_velocity_scale: 0.5
+          ff_velocity_scale: 2.0
 

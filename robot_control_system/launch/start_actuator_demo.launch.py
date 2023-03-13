@@ -8,7 +8,7 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    # Get URDF via xacro
+    # get urdf via xacro to show actuator movement
     robot_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
@@ -23,7 +23,8 @@ def generate_launch_description():
         ]
     )
     robot_description = {"robot_description": robot_description_content}
-
+    
+    # configuration specifying type of controllers for joints and their configurable parameters
     robot_controllers = PathJoinSubstitution(
         [
             FindPackageShare("robot_control_system"),
@@ -32,10 +33,12 @@ def generate_launch_description():
         ]
     )
     
+    # configuration for rviz
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare("robot_control_system"), "rviz", "control.rviz"]
     )
 
+    # node for controller manager which manages lifecycle of controllers defined for joints
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
@@ -46,6 +49,7 @@ def generate_launch_description():
         },
     )
 
+    # node which publishes robot state including the robot description
     robot_state_pub_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
@@ -53,6 +57,7 @@ def generate_launch_description():
         parameters=[robot_description],
     )
 
+    # node for launching rviz
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",
@@ -61,19 +66,21 @@ def generate_launch_description():
         arguments=["-d", rviz_config_file],
     )
 
+    # node to broadcasting joint states of various joints listed in urdf and configuration
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
         arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
     )
-
+    
+    # node to start controllers associated with the joints
     robot_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
         arguments=["position_trajectory_controller", "-c", "/controller_manager"],
     )
 
-    # Delay rviz start after `joint_state_broadcaster`
+    # delay rviz start after `joint_state_broadcaster`
     delay_rviz_after_joint_state_broadcaster_spawner = RegisterEventHandler(
         event_handler=OnProcessExit(
             target_action=joint_state_broadcaster_spawner,
@@ -81,7 +88,7 @@ def generate_launch_description():
         )
     )
 
-    # Delay start of robot_controller after `joint_state_broadcaster`
+    # delay start of robot_controller after `joint_state_broadcaster`
     delay_robot_controller_spawner_after_joint_state_broadcaster_spawner = RegisterEventHandler(
         event_handler=OnProcessExit(
             target_action=joint_state_broadcaster_spawner,

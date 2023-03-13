@@ -3,6 +3,13 @@
 namespace robot_control_system
 {
 
+// Different states in interfaces
+// Unconfigured, Inactive, Active, Finalized
+
+
+/**
+ * Function which gets invoked at starting of lifecycle in controllers
+*/
 CallbackReturn ArduinoActuatorInterface::on_init(
   const hardware_interface::HardwareInfo & info)
 {
@@ -19,6 +26,7 @@ CallbackReturn ArduinoActuatorInterface::on_init(
 
     int total_states = 0, total_commands = 0;
 
+    // get total required states and commands    
     for (uint i = 0; i < info_.joints.size(); i++)
     {
       for (uint j = 0; j < info_.joints[i].state_interfaces.size(); j++)
@@ -41,6 +49,7 @@ CallbackReturn ArduinoActuatorInterface::on_init(
     
     for (const hardware_interface::ComponentInfo & joint : info_.joints)
     {
+      // checking if required command interfaces is one
       if (joint.command_interfaces.size() != 1)
       {
         RCLCPP_FATAL(
@@ -50,6 +59,7 @@ CallbackReturn ArduinoActuatorInterface::on_init(
         return CallbackReturn::ERROR;
       }
 
+      // checking if required command interfaces is related to velocity
       if (joint.command_interfaces[0].name != hardware_interface::HW_IF_VELOCITY)
       {
         RCLCPP_FATAL(
@@ -59,6 +69,7 @@ CallbackReturn ArduinoActuatorInterface::on_init(
         return CallbackReturn::ERROR;
       }
 
+      // checking if required states interfaces is two
       if (joint.state_interfaces.size() != 2)
       {
         RCLCPP_FATAL(
@@ -68,6 +79,7 @@ CallbackReturn ArduinoActuatorInterface::on_init(
         return CallbackReturn::ERROR;
       }
 
+      // checking if required state interfaces is related to position
       if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION)
       {
         RCLCPP_FATAL(
@@ -77,6 +89,7 @@ CallbackReturn ArduinoActuatorInterface::on_init(
         return CallbackReturn::ERROR;
       }
 
+      // checking if required state interfaces is related to velocity
       if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
       {
         RCLCPP_FATAL(
@@ -98,11 +111,86 @@ CallbackReturn ArduinoActuatorInterface::on_init(
   return CallbackReturn::SUCCESS;
 }
 
+/**
+ * Function to send reference of state variables to parent controller
+ * These values can be read or modified by parent controller
+ * Executed after on_init function
+*/
+std::vector<hardware_interface::StateInterface> ArduinoActuatorInterface::export_state_interfaces()
+{
+  RCLCPP_INFO(
+    rclcpp::get_logger("arduino_actuator_interface"), "exporting state interfaces");
+  std::vector<hardware_interface::StateInterface> state_interfaces;
+
+  try
+  {
+    int current_state = 0;
+    for (uint i = 0; i < info_.joints.size(); i++)
+    {
+      for (uint j = 0; j < info_.joints[i].state_interfaces.size(); j++)
+      {
+        // reference of states are added here for allowing of read and modification by parent controller
+        state_interfaces.emplace_back(hardware_interface::StateInterface(
+          info_.joints[i].name, info_.joints[i].state_interfaces[j].name, &hw_states_[current_state]));
+        current_state = current_state + 1;
+      }
+    }
+  }
+  catch(std::exception &e)
+  {
+    RCLCPP_FATAL(
+      rclcpp::get_logger("arduino_actuator_interface"),
+      "Error: %s", e.what()
+    );
+  }
+
+  return state_interfaces;
+}
+
+/**
+ * Function to send reference of command variables to parent controller
+ * These values can be read or modified by parent controller
+ * Executed after on_init function
+*/
+std::vector<hardware_interface::CommandInterface> ArduinoActuatorInterface::export_command_interfaces()
+{
+  RCLCPP_INFO(
+    rclcpp::get_logger("arduino_actuator_interface"), "exporting command interfaces");
+  std::vector<hardware_interface::CommandInterface> command_interfaces;
+
+  try
+  {
+    int current_command = 0;
+    for (uint i = 0; i < info_.joints.size(); i++)
+    {
+      for (uint j = 0; j < info_.joints[i].command_interfaces.size(); j++)
+      {
+        // reference of commands are added here for allowing of read and modification by parent controller
+        command_interfaces.emplace_back(hardware_interface::CommandInterface(
+          info_.joints[i].name, info_.joints[i].command_interfaces[j].name, &hw_commands_[current_command]));
+        current_command = current_command + 1;
+      }
+    }
+  }
+  catch(std::exception &e)
+  {
+    RCLCPP_FATAL(
+      rclcpp::get_logger("arduino_actuator_interface"),
+      "Error: %s", e.what()
+    );
+  }
+  return command_interfaces;
+}
+
+/**
+ * Function which gets executed after export_state_interfaces and export_command_interfaces function
+ * Intialize all state and command based variables here
+*/
 CallbackReturn ArduinoActuatorInterface::on_configure(
   const rclcpp_lifecycle::State & previous_state)
 {
   RCLCPP_INFO(
-    rclcpp::get_logger("arduino_actuator_interface"), "configuring hardware .......");
+    rclcpp::get_logger("arduino_actuator_interface"), "configuring hardware");
   try
   {
     for (int i = 0; i < hw_start_sec_; i++)
@@ -113,11 +201,13 @@ CallbackReturn ArduinoActuatorInterface::on_configure(
         hw_start_sec_ - i);
     }
 
+    // states are initialized
     for (uint i = 0; i < hw_states_.size(); i++)
     {
       hw_states_[i] = 0;
     }
 
+    // commands are initialized
     for (uint i = 0; i < hw_commands_.size(); i++)
     {
       hw_commands_[i] = 0;
@@ -137,65 +227,10 @@ CallbackReturn ArduinoActuatorInterface::on_configure(
   return CallbackReturn::SUCCESS;
 }
 
-std::vector<hardware_interface::StateInterface> ArduinoActuatorInterface::export_state_interfaces()
-{
-  RCLCPP_INFO(
-    rclcpp::get_logger("arduino_actuator_interface"), "exporting state interfaces");
-  std::vector<hardware_interface::StateInterface> state_interfaces;
-
-  try
-  {
-    int current_state = 0;
-    for (uint i = 0; i < info_.joints.size(); i++)
-    {
-      for (uint j = 0; j < info_.joints[i].state_interfaces.size(); j++)
-      {
-        state_interfaces.emplace_back(hardware_interface::StateInterface(
-          info_.joints[i].name, info_.joints[i].state_interfaces[j].name, &hw_states_[current_state]));
-        current_state = current_state + 1;
-      }
-    }
-  }
-  catch(std::exception &e)
-  {
-    RCLCPP_FATAL(
-      rclcpp::get_logger("arduino_actuator_interface"),
-      "Error: %s", e.what()
-    );
-  }
-
-  return state_interfaces;
-}
-
-std::vector<hardware_interface::CommandInterface> ArduinoActuatorInterface::export_command_interfaces()
-{
-  RCLCPP_INFO(
-    rclcpp::get_logger("arduino_actuator_interface"), "exporting command interfaces");
-  std::vector<hardware_interface::CommandInterface> command_interfaces;
-
-  try
-  {
-    int current_command = 0;
-    for (uint i = 0; i < info_.joints.size(); i++)
-    {
-      for (uint j = 0; j < info_.joints[i].command_interfaces.size(); j++)
-      {
-        command_interfaces.emplace_back(hardware_interface::CommandInterface(
-          info_.joints[i].name, info_.joints[i].command_interfaces[j].name, &hw_commands_[current_command]));
-        current_command = current_command + 1;
-      }
-    }
-  }
-  catch(std::exception &e)
-  {
-    RCLCPP_FATAL(
-      rclcpp::get_logger("arduino_actuator_interface"),
-      "Error: %s", e.what()
-    );
-  }
-  return command_interfaces;
-}
-
+/**
+ * Function which gets executed after on_configure function
+ * This function gets invoked on activating the controller
+*/
 CallbackReturn ArduinoActuatorInterface::on_activate(
   const rclcpp_lifecycle::State & previous_state)
 {
@@ -212,6 +247,7 @@ CallbackReturn ArduinoActuatorInterface::on_activate(
         hw_start_sec_ - i);
     }
 
+    // initialising and connecting to serial communication module
     this->serial_port = new SerialPort("/dev/ttyACM0");
     this->serial_port->connect();
   }
@@ -228,6 +264,9 @@ CallbackReturn ArduinoActuatorInterface::on_activate(
   return CallbackReturn::SUCCESS;
 }
 
+/**
+ * This function gets invoked on de-activating the controller
+*/
 CallbackReturn ArduinoActuatorInterface::on_deactivate(
   const rclcpp_lifecycle::State & previous_state)
 {
@@ -243,6 +282,8 @@ CallbackReturn ArduinoActuatorInterface::on_deactivate(
         rclcpp::get_logger("arduino_actuator_interface"), "%.1f seconds left in deactivating",
         hw_stop_sec_ - i);
     }
+
+    // disconnecting from serial communication module
     this->serial_port->disconenct();
   }
   catch(std::exception &e)
@@ -258,6 +299,10 @@ CallbackReturn ArduinoActuatorInterface::on_deactivate(
   return CallbackReturn::SUCCESS;
 }
 
+/**
+ * Function which gets invoked at every configured update frequency
+ * Logic of converting sensor values to states happens here
+*/
 hardware_interface::return_type ArduinoActuatorInterface::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   RCLCPP_INFO(rclcpp::get_logger("arduino_actuator_interface"), "Reading");
@@ -265,21 +310,25 @@ hardware_interface::return_type ArduinoActuatorInterface::read(const rclcpp::Tim
   try
   {
     double radius = 0.038;
-    int full_rotation_forward = 841, full_rotation_reverse = 873;
+    double full_rotation_encoder_count = 873;
 
     char test_data[256];
     this->serial_port->read_from_serial(256, test_data);
-    int current_encoder_reading = atoi(test_data);
+    double current_encoder_reading = std::stod(test_data);
 
-    int total_elapsed_count = current_encoder_reading - this->encoder_readings_[0];
-    double velocity = 2 * 3.14 * 0.38 * (total_elapsed_count / full_rotation_forward) * 10;
+    double total_elapsed_count = current_encoder_reading - this->encoder_readings_[0];
+    // calculating rate of change by getting the circumference of wheel and multiplying it with time interval
+    // 2 * pi * radius of the wheel * (elapsed encoder count / total count needed by encoder for full rotation) * elapsed time period in hz
+    double velocity = 2 * 3.14 * radius * (total_elapsed_count / full_rotation_encoder_count) * 10; //(frequency is 10 hz)
 
     this->encoder_readings_[0] = current_encoder_reading;
 
-    hw_states_[0] = velocity;
+    // computing angular displacement (linear velocity / (radius * elasped time in hz))
+    double radians = hw_states_[0] + (velocity / (radius * 10));
+    hw_states_[0] = radians;
     hw_states_[1] = velocity;
 
-    RCLCPP_INFO(rclcpp::get_logger("arduino_actuator_interface"), "%i %i %f", current_encoder_reading, total_elapsed_count, velocity);
+    RCLCPP_INFO(rclcpp::get_logger("arduino_actuator_interface"), "%f %f %f %f", current_encoder_reading, total_elapsed_count, hw_states_[0], hw_states_[1]);
   }
   catch(std::exception &e)
   {
@@ -294,14 +343,24 @@ hardware_interface::return_type ArduinoActuatorInterface::read(const rclcpp::Tim
   return hardware_interface::return_type::OK;
 }
 
+/**
+ * Function which gets invoked at every configured update frequency
+ * Based on commands obtained external actuators or other devices can be controlled from here
+*/
 hardware_interface::return_type ArduinoActuatorInterface::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  RCLCPP_INFO(rclcpp::get_logger("arduino_actuator_interface"), "Writing...");
+  RCLCPP_INFO(rclcpp::get_logger("arduino_actuator_interface"), "Writing");
 
   try
   {
-    string data = "100;1;0;\n";
+    // normalising threshold values (normalized_value = ((value - old_min) / (old_max - old_min)) * (new_max - new_min) + new_min)
+    // 101, 0 - max, min command value to be obtained from control loop
+    // 99, 15 - max, min command value to be sent for Arduino PWM control
+    double threshold = ((hw_commands_[0]) / (101)) * (99 - 15) + 15;
+    // Format for serial data (pwm_signal_value;forward;reverse)
+    string data = std::to_string((int) threshold) + ";0;1;\n";
     this->serial_port->write_to_serial(data.c_str());
+    RCLCPP_INFO(rclcpp::get_logger("arduino_actuator_interface"), "Writing %s", data.c_str());
   }
   catch(std::exception &e)
   {
@@ -313,7 +372,7 @@ hardware_interface::return_type ArduinoActuatorInterface::write(const rclcpp::Ti
   }
 
   RCLCPP_INFO(
-    rclcpp::get_logger("arduino_actuator_interface"), "Joints successfully written");
+    rclcpp::get_logger("arduino_actuator_interface"), "Joints successfully written %f", hw_commands_[0]);
 
   return hardware_interface::return_type::OK;
 }

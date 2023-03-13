@@ -60,9 +60,7 @@ private:
 
   std::vector<double> hw_commands_;
   std::vector<double> hw_states_;
-
   std::vector<double> encoder_readings_;
-  std::vector<double> timings_;
 
   SerialPort * serial_port;
 };
