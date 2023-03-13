@@ -27,7 +27,7 @@ namespace robot_control_system
 class ArduinoActuatorInterface : public hardware_interface::SystemInterface
 {
 public:
-  RCLCPP_SHARED_PTR_DEFINITIONS(ArduinoActuatorInterface);
+  RCLCPP_SHARED_PTR_DEFINITIONS(ArduinoActuatorInterface)
 
   ROBOT_CONTROL_SYSTEM_PUBLIC
   CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override;
@@ -60,6 +60,7 @@ private:
 
   std::vector<double> hw_commands_;
   std::vector<double> hw_states_;
+  std::vector<double> encoder_readings_;
 
   SerialPort * serial_port;
 };

@@ -19,7 +19,7 @@ class SerialPort
 public:
   SerialPort(string port);
   int connect();
-  char * read_from_serial(int bytes_to_read);
+  int read_from_serial(int bytes_to_read, char * output);
   int write_to_serial(const char * data);
   void disconenct();
 

@@ -5,6 +5,7 @@ namespace robot_control_system_tester
   RobotControlCommander::RobotControlCommander(
     const rclcpp::NodeOptions & options) : Node("robot_control_commander", options)
   {
+    // topic to which joint trajectories to be passed
     this->robot_control_publisher_ = this->create_publisher<trajectory_msgs::msg::JointTrajectory>(
       "/position_trajectory_controller/joint_trajectory", 10);
     
@@ -19,11 +20,10 @@ namespace robot_control_system_tester
     joint_trajectory.joint_names = joint_names;
     std::vector<trajectory_msgs::msg::JointTrajectoryPoint> joint_trajectory_points;
     trajectory_msgs::msg::JointTrajectoryPoint joint_trajectory_point;
-    std::vector<double> positions = {0.5};
-    joint_trajectory_point.positions = positions;
-    joint_trajectory_point.accelerations = positions;
-    joint_trajectory_point.effort = positions;
-    joint_trajectory_point.velocities = positions;
+    joint_trajectory_point.positions = {50}; // position is set for joint 2
+    joint_trajectory_point.accelerations = {};
+    joint_trajectory_point.effort = {};
+    joint_trajectory_point.velocities = {0.2}; // velocity is set for joint 2
     joint_trajectory_points.push_back(joint_trajectory_point);
     joint_trajectory.points = joint_trajectory_points;
 
