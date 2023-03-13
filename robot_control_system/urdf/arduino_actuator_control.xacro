@@ -72,9 +72,9 @@
     </hardware>
 
     <joint name="joint2">
-      <command_interface name="effort">
-        <param name="min">-1</param>
-        <param name="max">1</param>
+      <command_interface name="velocity">
+        <param name="min">-0.8</param>
+        <param name="max">0.8</param>
       </command_interface>
       <state_interface name="position" />
       <state_interface name="velocity" />

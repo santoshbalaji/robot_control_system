@@ -11,6 +11,7 @@ Encoder encoder(ENCAF, ENCAR);
 int pwm_value = 0, forward = 0, reverse = 0;
 long encoder_reading = 0;
 String data;
+long elapsed_time = 0;
 
 void setup() 
 {
@@ -22,41 +23,46 @@ void setup()
 
 void loop() 
 {
-  analogWrite(PWMA, pwm_value);
-  digitalWrite(MAF, forward);
-  digitalWrite(MAR, reverse);
-  
-  while(Serial.available() > 0)
+  if(millis() - elapsed_time >= 50)
   {
-    char s = Serial.read();
-    data += s; 
-    if(s == '\n')
+    analogWrite(PWMA, pwm_value);
+    digitalWrite(MAF, forward);
+    digitalWrite(MAR, reverse);
+    
+    while(Serial.available() > 0)
     {
-      int prev = 0, count = 0;
-      for (int  i = 0; i < data.length(); i++)
+      char s = Serial.read();
+      data += s; 
+      if(s == '\n')
       {
-        if(data[i] == ';')
+        int prev = 0, count = 0;
+        for (int  i = 0; i < data.length(); i++)
         {
-          if(count == 0)
+          if(data[i] == ';')
           {
-            pwm_value = data.substring(prev, i).toInt();
+            if(count == 0)
+            {
+              pwm_value = data.substring(prev, i).toInt();
+            }
+            else if(count == 1)
+            {
+              forward = data.substring(prev, i).toInt();
+            }
+            else if(count == 2)
+            {
+              reverse = data.substring(prev, i).toInt();
+            }
+            prev = i + 1;
+            count = count + 1;
           }
-          else if(count == 1)
-          {
-            forward = data.substring(prev, i).toInt();
-          }
-          else if(count == 2)
-          {
-            reverse = data.substring(prev, i).toInt();
-          }
-          prev = i + 1;
-          count = count + 1;
         }
+        data = "";
       }
-      data = "";
     }
+  
+    encoder_reading = encoder.read();
+    Serial.println(encoder_reading);
+  
+    elapsed_time = millis();
   }
-
-  encoder_reading = encoder.read();
-  Serial.write(encoder_reading);
 }
