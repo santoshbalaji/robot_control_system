@@ -18,3 +18,5 @@ To run the test package
 
 
 Infra Required
+
+![Infra](https://github.com/santoshbalaji/robot_control_system/tree/main/docs/infra.png)
